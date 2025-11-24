@@ -74,3 +74,13 @@ export const createOffer = asyncHandler(async(req, res, next) => {
         offer,
     });
 });
+
+export const getAllHr = asyncHandler(async(req, res, next) => {
+    const hrUsers = await User.find({role:"HR"}).select('-password');
+    res.status(200).json({
+        success:true,
+        count:hrUsers.length,
+        data:hrUsers,
+    });
+});
+    
