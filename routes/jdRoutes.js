@@ -12,7 +12,7 @@ router.post("/:offerId", protect, authorize("HR"), createJD);
 // AI-powered JD creation
 router.post("/:offerId/ai", protect, authorize("HR"), createJDWithAI);
 router.post("/:jdId/filter-resumes", protect, authorize("HR"), filterResumes);
-router.get("/all-jd", protect, authorize("HR"), getAllJds);
+router.get("/all-jd", protect, authorize("HR", "Candidate"), getAllJds);
 router.get("/all-candidates", protect, authorize("HR"), getAllCandidates);
 router.post("/:jdId/add-resume", protect, authorize("HR"), addresumeToJD);
 router.get("/:jdId/candidates", protect, authorize("HR"), getAllCandidatesAppliedToJD);
