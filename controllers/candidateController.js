@@ -8,6 +8,7 @@ import { bulkJDInviteTemplate } from '../utils/emailTemplates/bulkJDInviteTempla
  */
 import JD from "../models/jobDescription.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import mongoose from "mongoose";
 import errorResponse from "../utils/errorResponse.js";
 import cloudinary, { uploadBuffer } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
@@ -109,6 +110,24 @@ export const getAllCandidates = asyncHandler(async (req, res, next) => {
   res.json({ success: true, candidates });
 });
 
+// Get candidate details by id
+export const getCandidateById = asyncHandler(async (req, res, next) => {
+  const candidateId = req.params.id;
+  if (!candidateId) return next(new errorResponse('Candidate id is required', 400));
+
+  let candidate = null;
+  if (mongoose.Types.ObjectId.isValid(candidateId)) {
+    candidate = await Candidate.findById(candidateId).select('-password');
+  } else {
+    // Fallback: attempt to find by alternate identifier fields (e.g., candidateId or email)
+    candidate = await Candidate.findOne({ $or: [{ candidateId }, { email: candidateId }] }).select('-password');
+  }
+
+  if (!candidate) return next(new errorResponse('Candidate not found', 404));
+
+  res.status(200).json({ success: true, candidate });
+});
+
 export const sendBulkJDInvite = asyncHandler(async (req, res, next) => {
   const { jdId } = req.params;
   const { candidateIds } = req.body;
@@ -140,11 +159,10 @@ export const sendBulkJDInvite = asyncHandler(async (req, res, next) => {
       jd.companyName || 'Our Company',
       applyUrl
     );
-    //jd.jobSummary || jd.title ||
     try {
       await sendEmail({
         to: candidate.email,
-        subject: `New Opening: ${ jd.jobTitle}`,
+        subject: `New Opening: ${jd.jobSummary || jd.title || jd.jobTitle}`,
         html
       });
       sentCount++;
